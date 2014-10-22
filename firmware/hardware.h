@@ -25,32 +25,47 @@
 
 #define SPICHAN			2
 
-/*    PORT USAGE
+/*    PORT USAGE (pin numbers for a 44 quad flat part)
  *
- *	Pin	Port	Dir	Signal
+ *	Pin 	Port	Dir 	Signal-notes
  *
- *	2	RA0	OUT	SPINDLE_ENABLE
- *	3	RA1	OUT	MIST_ENABLE
- *	9	RA2	OUT	STEP_Z
- *	10	RA3	OUT	DIR_Z
- *	12	RA4	OUT	STEP_X
- *	4	RB0	OUT	FLOOD_ENABLE
- *	5	RB1	OUT	DIR_A
- *	6	RB2	OUT	ENABLE
- *	7	RB3	OUT	STEP_A
- *	11	RB4	OUT	DIR_X
- *	14	RB5	OUT	Status LED
- *	21	RB10	OUT	DIR_Y
- *	22	RB11	OUT	MISO
- *	23	RB12	OUT	STEP_Y
+ *	19  	RA0  	OUT  	OUT4-PWM-Laser_power
+ *	20  	RA1		OUT		OUT5-PWM-Lights	
+ * 	30  	RA2  	OUT 	OUT13-Astep
+ * 	31  	RA3  	OUT 	OUT14-Zdir
+ * 	34  	RA4  	OUT 	OUT17-Ystep
+ * 	13  	RA7  	OUT 	OUT3-Laser_fire
+ *	32  	RA8  	OUT 	OUT15-Zstep
+ * 	35  	RA9  	OUT 	OUT18-Xdir
+ * 	12		RA10 	OUT 	OUT2-Beeper
  *
- *	15	RB6	IN	HOME_A
- *	16	RB7	IN	HOME_Z
- *	17	RB8	IN	HOME_Y
- *	18	RB9	IN	HOME_X
- *	24	RB13	IN	MOSI
- *	25	RB14	IN	CS
- *	26	RB15	IN	SCLK
+ * 	21  	RB0  	OUT 	OUT6-PWM-Air_valve
+ * 	22  	RB1  	OUT 	OUT7_PS_on
+ * 	23  	RB2  	OUT 	OUT8
+ * 	24  	RB3  	OUT 	OUT9
+ * 	33  	RB4  	OUT 	OUT16-Ydir
+ * 	41  	RB5  	IN   	IN3-I2C_fault
+ * 	42  	RB6  	IN   	IN4-Door
+ * 	43  	RB7  	IN   	IN5-Laser_off
+ * 	44  	RB8  	IN   	IN6-Ablock
+ * 	1    	RB9  	IN   	IN7
+ * 	8    	RB10  	IN   	IN12-Xhome
+ * 	9   	RB11	SPI 	MISO
+ * 	10  	RB12  	OUT   	OUT1-Enable
+ * 	11   	RB13	SPI 	MOSI
+ * 	14   	RB14	SPI 	CS
+ * 	15   	RB15	SPI 	Sclk
+ *
+ * 	25  	RC0  	OUT   	OUT10-Bdir
+ * 	26  	RC1  	OUT   	OUT11-Bstep
+ * 	27  	RC2  	OUT   	OUT12-Adir
+ * 	36  	RC3  	OUT   	OUT19-Xstep
+ * 	37    	RC4  	IN   	IN1-Stop
+ * 	38    	RC5  	IN   	IN2-EPO
+ * 	2    	RC6  	IN   	IN8-Bhome
+ * 	3    	RC7  	IN   	IN9-Ahome
+ * 	4    	RC8  	IN   	IN10-Zhome
+ * 	5    	RC9  	IN   	IN11-Yhome
  *
  */
 
