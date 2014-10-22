@@ -13,6 +13,9 @@
  *    You should have received a copy of the GNU General Public License
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ *
+ *    22OCT2014 PJS started changes to support the PICnc 5 axis hardware
  */
 
 #include <stdio.h>
@@ -21,76 +24,62 @@
 #include "hardware.h"
 #include "stepgen.h"
 
-#pragma config POSCMOD = OFF		/* Primary Oscillator disabled */
-#pragma config FNOSC = FRCPLL		/* Fast RC Osc w/Div-by-N */
-#pragma config FPLLODIV = DIV_2		/* PLL configured for 48MHz clock */
-#pragma config FPLLMUL = MUL_24
-#pragma config FPLLIDIV = DIV_2
-#pragma config FPBDIV = DIV_1		/* Peripheral Clock Divisor */
-#pragma config IESO = ON		/* Internal/External Switch Over disabled */
-#pragma config FSOSCEN = OFF		/* Secondary Oscillator disabled */
-#pragma config CP = OFF			/* Code Protect Disabled */
-#pragma config FWDTEN = ON		/* Watchdog Timer Enable */
-#pragma config WDTPS = PS4096		/* Watchdog Timer Postscaler */
-#pragma config PMDL1WAY = OFF		/* Allow multiple PM configurations */
-#pragma config IOL1WAY = OFF		/* Allow multiple PPS configurations */
-
-#define BASEFREQ			80000
-#define CORE_TICK_RATE	        	(SYS_FREQ/2/BASEFREQ)
-#define SPIBUFSIZE			20
-#define BUFSIZE				(SPIBUFSIZE/4)
-#define SPI_TIMEOUT			1000L
 
 static volatile uint32_t rxBuf[BUFSIZE], txBuf[BUFSIZE];
 static volatile int spi_data_ready;
 
-static void map_peripherals()
-{
+static void map_peripherals(){
 	/* unlock PPS sequence */
 	SYSKEY = 0x0;			/* make sure it is locked */
 	SYSKEY = 0xAA996655;		/* Key 1 */
 	SYSKEY = 0x556699AA;		/* Key 2 */
 	CFGCONbits.IOLOCK=0;		/* now it is unlocked */
 
-	/* map SPI and PWM pins */
+	/* map SPI pins */
 	PPSInput(4, SS2, RPB14);	/* CS */
 	PPSInput(3, SDI2, RPB13);	/* MOSI */
 	PPSOutput(2, RPB11, SDO2);	/* MISO */
+	/* SPI clock pin placement is fixed and cannot be changed */
+
+	/* map SPI and PWM pins */
+	// TODO add code to enable the hardware PWM outputs if used
+	//PPSOutput(1, RPA0, OC1);	/* PWM (OUT4 laser power) */
+	//PPSOutput(2, RPA1, OC2);	/* PWM (OUT5 lights) */
+	//PPSOutput(3, RPB2, OC4);	/* PWM (OUT8) */
+	//PPSOutput(4, RPB0, OC3);	/* PWM (OUT6 air valve) */
 
 	/* lock PPS sequence */
 	CFGCONbits.IOLOCK=1;		/* now it is locked */
 	SYSKEY = 0x0;			/* lock register access */
 }
 
-static void init_io_ports()
-{
+static void init_io_ports(){
 	/* disable all analog pins */
 	ANSELA = 0x0;
 	ANSELB = 0x0;
+	ANSELC = 0x0;
 
 	/* configure inputs */
-	TRISBSET = BIT_6 | BIT_7 | BIT_8 | BIT_9 |
-		   BIT_13 | BIT_14 | BIT_15;
+	TRISBSET = BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9 | BIT_10 | BIT_13 | BIT_14 | BIT_15;
+	TRISCSET = BIT_4 | BIT_5 | BIT_6 | BIT_7 | BIT_8 | BIT_9;
 
 	/* configure_outputs */
-	TRISACLR = BIT_0 | BIT_1 | BIT_2 | BIT_3 | BIT_4 ;
-	TRISBCLR = BIT_0 | BIT_1 | BIT_2 | BIT_3 | BIT_4 |
-		   BIT_5 | BIT_10 | BIT_11 | BIT_12;
+	TRISACLR = BIT_0 | BIT_1 | BIT_2 | BIT_3 | BIT_4 | BIT_7 | BIT_8 | BIT_9 | BIT_10;
+	TRISBCLR = BIT_0 | BIT_1 | BIT_2 | BIT_3 | BIT_4 | BIT_11 | BIT_12;
+	TRISCCLR = BIT_0 | BIT_1 | BIT_2 | BIT_3;
 
 }
 
-static void init_spi()
-{
+static void init_spi(){
 	int i;
 
-	SPI2CON = 0;		/* stop SPI 2, set Slave mode, 8 bits, std buffer */
-	i = SPI2BUF;		/* clear rcv buffer */
+	SPI2CON = 0;			/* stop SPI 2, set Slave mode, 8 bits, std buffer */
+	i = SPI2BUF;			/* clear rcv buffer */
 	SPI2CON = 1<<8 | 0<<6;	/* Clock Edge */
-	SPI2CONSET = 1<<15;	/* start SPI 2 */
+	SPI2CONSET = 1<<15;		/* start SPI 2 */
 }
 
-static void init_dma()
-{
+static void init_dma(){
 	/* open and configure the DMA channels
 	     DMA 0 is for SPI -> buffer
 	     DMA 1 is for buffer -> SPI */
@@ -110,57 +99,155 @@ static void init_dma()
 	DmaChnEnable(1);
 }
 
-static inline uint32_t read_inputs()
-{
-	uint32_t x, y;
+static inline uint32_t read_inputs(){
+	uint32_t x;
+	
+	#ifdef LED_TOGGLE
+		uint32_t y;
+		LED_TOGGLE0;	/* push LED state */
+		LED_TOGGLE1;	/* set LED pin high */
+		LED_TOGGLE2;	/* set LED pin as input */
+		LED_TOGGLE3;		/* pop LED state */
+	#endif /* LED_TOGGLE */
 
-	y = BIT_5 & ~LATB;	/* push LED state */
-	LATBSET = BIT_5;	/* set LED pin high */
-	TRISBSET = BIT_5;	/* set LED pin as input */
-	LATBCLR = y;		/* pop LED state */
+	x  = (IO_IN1 ? 1 : 0) << 0;
+	x |= (IO_IN2 ? 1 : 0) << 1;
+	x |= (IO_IN3 ? 1 : 0) << 2;
+	x |= (IO_IN4 ? 1 : 0) << 3;
+	x |= (IO_IN5 ? 1 : 0) << 4;
+	x |= (IO_IN6 ? 1 : 0) << 5;
+	x |= (IO_IN7 ? 1 : 0) << 6;
+	x |= (IO_IN8 ? 1 : 0) << 7;
+	x |= (IO_IN9 ? 1 : 0) << 8;
+	x |= (IO_IN10 ? 1 : 0) << 9;
+	x |= (IO_IN11 ? 1 : 0) << 10;
+	x |= (IO_IN12 ? 1 : 0) << 11;
 
-	x  = (HOME_X_IN ? 1 : 0) << 0;
-	x |= (HOME_Y_IN ? 1 : 0) << 1;
-	x |= (HOME_Z_IN ? 1 : 0) << 2;
-	x |= (HOME_A_IN ? 1 : 0) << 3;
-	x |= (STOP_IN   ? 1 : 0) << 4;
-
-	TRISBCLR = BIT_5;	/* set LED pin as output */
+	#ifdef LED_TOGGLE
+		LED_TOGGLE4;	/* set LED pin as output */
+	#endif /* LED_TOGGLE */
 
 	return x;
 }
 
-static inline void update_outputs(uint32_t x)
-{
-	if (x & (1 << 0))
-		SPINDLE_EN_HI;
-	else
-		SPINDLE_EN_LO;
-
-	if (x & (1 << 1))
-		MIST_EN_HI;
-	else
-		MIST_EN_LO;
-
-	if (x & (1 << 2))
-		FLOOD_EN_HI;
-	else
-		FLOOD_EN_LO;
-
-	if (x & (1 << 3))
-		ENABLE_LO;	/* active low signal */
-	else
-		ENABLE_HI;
+static inline void update_outputs(uint32_t x){
+	if (x & (1 << 0)){
+		IO_OUT1_HI;
+	}else{
+		IO_OUT1_LO;
+	}
+	if (x & (1 << 1)){
+		IO_OUT2_HI;
+	}else{
+		IO_OUT2_LO;
+	}
+	if (x & (1 << 2)){
+		IO_OUT3_HI;
+	}else{
+		IO_OUT3_LO;
+	}
+	if (x & (1 << 3)){
+		IO_OUT4_HI;
+	}else{
+		IO_OUT4_LO;
+	}
+// TODO add code here to deal with when the hardware PWM is turned on (if ever used) 	
+	if (x & (1 << 4)){
+		IO_OUT5_HI;
+	}else{
+		IO_OUT5_LO;
+	}
+// TODO add code here to deal with when the hardware PWM is turned on (if ever used) 	
+	if (x & (1 << 5)){
+		IO_OUT6_HI;
+	}else{
+		IO_OUT6_LO;
+	}
+// TODO add code here to deal with when the hardware PWM is turned on (if ever used) 	
+	if (x & (1 << 6)){
+		IO_OUT7_HI;
+	}else{
+		IO_OUT7_LO;
+	}
+	if (x & (1 << 7)){
+		IO_OUT8_HI;
+	}else{
+		IO_OUT8_LO;
+	}
+// TODO add code here to deal with when the hardware PWM is turned on (if ever used) 	
+	if (x & (1 << 8)){
+		IO_OUT9_HI;
+	}else{
+		IO_OUT9_LO;
+	}
+	#ifndef CONFIGURE_B_AXIS
+		if (x & (1 << 9)){
+			IO_OUT10_HI;
+		}else{
+			IO_OUT10_LO;
+		}
+		if (x & (1 << 10)){
+			IO_OUT11_HI;
+		}else{
+			IO_OUT11_LO;
+		}
+	#endif /* CONFIGURE_B_AXIS */
+	#ifndef CONFIGURE_A_AXIS
+		if (x & (1 << 11)){
+			IO_OUT12_HI;
+		}else{
+			IO_OUT12_LO;
+		}
+		if (x & (1 << 12)){
+			IO_OUT13_HI;
+		}else{
+			IO_OUT13_LO;
+		}
+	#endif /* CONFIGURE_A_AXIS */
+	#ifndef CONFIGURE_z_AXIS
+		if (x & (1 << 13)){
+			IO_OUT14_HI;
+		}else{
+			IO_OUT14_LO;
+		}
+		if (x & (1 << 14)){
+			IO_OUT15_HI;
+		}else{
+			IO_OUT15_LO;
+		}
+	#endif /* CONFIGURE_Z_AXIS */
+	#ifndef CONFIGURE_Y_AXIS
+		if (x & (1 << 15)){
+			IO_OUT16_HI;
+		}else{
+			IO_OUT16_LO;
+		}
+		if (x & (1 << 16)){
+			IO_OUT17_HI;
+		}else{
+			IO_OUT17_LO;
+		}
+	#endif /* CONFIGURE_Y_AXIS */
+	#ifndef CONFIGURE_X_AXIS
+		if (x & (1 << 17)){
+			IO_OUT18_HI;
+		}else{
+			IO_OUT18_LO;
+		}
+		if (x & (1 << 18)){
+			IO_OUT19_HI;
+		}else{
+			IO_OUT19_LO;
+		}
+	#endif /* CONFIGURE_X_AXIS */
 }
 
-void reset_board()
-{
+void reset_board(){
 	stepgen_reset();
-	update_outputs(0);
+	update_outputs(0); 		/* all outputs low */
 }
 
-int main(void)
-{
+int main(void){
 	int i, spi_timeout;
 	unsigned long counter;
 
@@ -221,7 +308,7 @@ int main(void)
 				break;
 			case 0x5453543E:	/* >TST */
 				for (i=0; i<BUFSIZE; i++)
-					txBuf[i] = rxBuf[i] ^ ~0;
+					txBuf[i] = rxBuf[i] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
 				break;
 			}
 		}
@@ -240,10 +327,12 @@ int main(void)
 			spi_timeout = SPI_TIMEOUT;
 		}
 
-		/* reset the board if there is no SPI activity */
-		if (spi_timeout)
+		/* dec the SPI timeout timer */
+		if (spi_timeout){
 			spi_timeout--;
+		}
 
+		/* reset the board if there is no SPI activity */
 		if (spi_timeout == 1) {				
 			DCH0ECONSET=BIT_6;	/* abort DMA transfers */
 			DCH1ECONSET=BIT_6;
@@ -256,19 +345,20 @@ int main(void)
 			while (!SPI2STATbits.SPITBF);
 		}
 
-		/* blink onboard led */
-		if (!(counter++ % (spi_timeout ? 0x10000 : 0x40000))) {
-			LED_TOGGLE;
-		}
-
-		/* keep alive */
+		#ifdef LED_TOGGLE
+			/* blink onboard led */
+			if (!(counter++ % (spi_timeout ? 0x10000 : 0x40000))) {
+				LED_TOGGLE;
+			}
+		#endif /* LED_TOGGLE */
+		
+		/* keep watchdog alive */
 		WDTCONSET = 0x01;
 	}
 	return 0;
 }
 
-void __ISR(_CORE_TIMER_VECTOR, ipl6) CoreTimerHandler(void)
-{
+void __ISR(_CORE_TIMER_VECTOR, ipl6) CoreTimerHandler(void){
 	/* update the period */
 	UpdateCoreTimer(CORE_TICK_RATE);
 

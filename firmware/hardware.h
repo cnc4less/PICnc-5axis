@@ -13,6 +13,8 @@
  *    You should have received a copy of the GNU General Public License
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ * 	  22OCT2014 PJS updated to match the PICnc 5 axis hardware settings
  */
 
 #ifndef __HARDWARE_H__
@@ -30,18 +32,48 @@
 	#define CONFIGURE_B_AXIS
 	
 	// PJS 22OCT2014 removing the status led for now may make it a compile option in the future... 
-	//#define LED_TOGGLE		(LATCINV = BIT_4)
+	//#define LED_TOGGLE	(LATCINV = BIT_4)
+	//#define LED_TOGGLE0	(y = BIT_4 & ~LATC)	
+	//#define LED_TOGGLE1	(LATCSET = BIT_4)	
+	//#define LED_TOGGLE2	(TRISCSET = BIT_4)	
+	//#define LED_TOGGLE3	(LATCCLR = y)	
+	//#define LED_TOGGLE4	(TRISCCLR = BIT_4)	
 	
 	// #####################################
 	// End user configuration defs
 	// #####################################
+
+	// set the chip fuses
+	#pragma config POSCMOD = OFF		/* Primary Oscillator disabled */
+	#pragma config FNOSC = FRCPLL		/* Fast RC Osc w/Div-by-N */
+	#pragma config FPLLODIV = DIV_2		/* PLL configured for 48MHz clock */
+	#pragma config FPLLMUL = MUL_24
+	#pragma config FPLLIDIV = DIV_2
+	#pragma config FPBDIV = DIV_1		/* Peripheral Clock Divisor */
+	#pragma config IESO = ON			/* Internal/External Switch Over enabled */
+	#pragma config FSOSCEN = OFF		/* Secondary Oscillator disabled */
+	#pragma config CP = OFF				/* Code Protect Disabled */
+	#pragma config FWDTEN = ON			/* Watchdog Timer Enable */
+	#pragma config WDTPS = PS4096		/* Watchdog Timer Postscaler */
+	#pragma config PMDL1WAY = OFF		/* Allow multiple PM configurations */
+	#pragma config IOL1WAY = OFF		/* Allow multiple PPS configurations */
 	
-	#define SYS_FREQ		(48000000ul)    /* 48 MHz */
-	#define GetSystemClock()	(SYS_FREQ)
+	
+	// preformance config 
+	#define SYS_FREQ				(48000000ul)    /* 48 MHz */
+	#define GetSystemClock()		(SYS_FREQ)
 	#define	GetPeripheralClock()	(GetSystemClock())
 	#define	GetInstructionClock()	(GetSystemClock())
+
+	// timer config
+	#define BASEFREQ				80000
+	#define CORE_TICK_RATE 			(SYS_FREQ/2/BASEFREQ)
+	#define SPIBUFSIZE				20
+	#define BUFSIZE					(SPIBUFSIZE/4)
+
+	#define SPI_TIMEOUT				1000L
 	
-	#define SPICHAN			2
+	#define SPICHAN					2
 	
 	/*    PORT USAGE (pin numbers for a 44 quad flat part PICnc-5Axis)
 	 *
@@ -59,7 +91,7 @@
 	 *
 	 * 	21  	RB0  	OUT 	OUT6-PWM-Air_valve
 	 * 	22  	RB1  	OUT 	OUT7_PS_on
-	 * 	23  	RB2  	OUT 	OUT8
+	 * 	23  	RB2  	OUT 	OUT8 (PWM supportable on this pin as well) 
 	 * 	24  	RB3  	OUT 	OUT9
 	 * 	33  	RB4  	OUT 	OUT16-Ydir
 	 * 	41  	RB5  	IN   	IN3-I2C_fault
