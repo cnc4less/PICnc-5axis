@@ -26,11 +26,11 @@
 /*
   Timing diagram:
 
-  STEPWIDTH   |<---->|
-	       ______           ______
-  STEP	     _/      \_________/      \__
-  	     ________                  __
-  DIR	             \________________/
+STEPWIDTH  |<---->|
+            ______           ______
+STEP      _/      \_________/      \__
+          ________                  __
+DIR               \________________/
 
   Direction signal changes on the falling edge of the step pulse.
 

@@ -15,6 +15,7 @@
  *    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  *
  * 	  22OCT2014 PJS updated to match the PICnc 5 axis hardware settings
+ *    24OCT2014 PJS updated core freq to 40MHz from 48MHz to not overclock the PIC32s I am using (max freq 40MHz special order parts can go up to 50MHz) and moved in MAXGEN from stepgen.h
  */
 
 #ifndef __HARDWARE_H__
@@ -23,6 +24,11 @@
 	// #####################################
 	// Start user configuration defs
 	// #####################################
+	// Update the code to decide which channels to configure for stepgen based off this define
+	// Set the number of active stepgen channels starting with X -> Y -> Z -> A -> B (note 5 is the max defined) 
+	#define MAXGEN		5
+
+
 	// comment out any of the following 5 lines that you don't want used as a step / direction driver
 	// Any channel commented out will be set up as a pair of normal outputs. 
 	#define CONFIGURE_X_AXIS
@@ -30,6 +36,7 @@
 	#define CONFIGURE_Z_AXIS
 	#define CONFIGURE_A_AXIS
 	#define CONFIGURE_B_AXIS
+	
 	
 	// PJS 22OCT2014 removing the status led for now may make it a compile option in the future... 
 	//#define LED_TOGGLE	(LATCINV = BIT_4)
@@ -60,7 +67,7 @@
 	
 	
 	// preformance config 
-	#define SYS_FREQ				(48000000ul)    /* 48 MHz */
+	#define SYS_FREQ				(40000000ul)    /* 40 MHz */
 	#define GetSystemClock()		(SYS_FREQ)
 	#define	GetPeripheralClock()	(GetSystemClock())
 	#define	GetInstructionClock()	(GetSystemClock())
