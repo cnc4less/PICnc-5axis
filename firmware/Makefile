@@ -47,6 +47,9 @@ SRCOBJ	= main.o stepgen.o
 all:		.deps picnc-5axis.elf picnc-5axis.hex
 		$(SIZE) picnc-5axis.elf
 clean:
+		rm -rf .deps *.o *.elf *.bin *.dis *.map *.dep
+
+veryclean:
 		rm -rf .deps *.o *.elf *.bin *.dis *.map *.hex *.dep
 
 .deps:
