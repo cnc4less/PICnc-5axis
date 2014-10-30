@@ -19,6 +19,10 @@
 
 #ifndef __STEPGEN_H__
 	#define __STEPGEN_H__
+
+
+	#define __NO_FUSE__  // make sure the fuses are not loaded twice else you will get a picnc.elf section `.config_BFC00BF0' will not fit in region error
+	#include "hardware.h"
 	
 	#define STEPBIT		23
 	#define HALFSTEP_MASK	(1L<<(STEPBIT-1))

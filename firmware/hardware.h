@@ -51,19 +51,21 @@
 	// #####################################
 
 	// set the chip fuses
-	#pragma config POSCMOD = OFF		/* Primary Oscillator disabled */
-	#pragma config FNOSC = FRCPLL		/* Fast RC Osc w/Div-by-N */
-	#pragma config FPLLODIV = DIV_2		/* PLL configured for 48MHz clock */
-	#pragma config FPLLMUL = MUL_24
-	#pragma config FPLLIDIV = DIV_2
-	#pragma config FPBDIV = DIV_1		/* Peripheral Clock Divisor */
-	#pragma config IESO = ON			/* Internal/External Switch Over enabled */
-	#pragma config FSOSCEN = OFF		/* Secondary Oscillator disabled */
-	#pragma config CP = OFF				/* Code Protect Disabled */
-	#pragma config FWDTEN = ON			/* Watchdog Timer Enable */
-	#pragma config WDTPS = PS4096		/* Watchdog Timer Postscaler */
-	#pragma config PMDL1WAY = OFF		/* Allow multiple PM configurations */
-	#pragma config IOL1WAY = OFF		/* Allow multiple PPS configurations */
+	#ifndef __NO_FUSE__
+		#pragma config POSCMOD = OFF		/* Primary Oscillator disabled */
+		#pragma config FNOSC = FRCPLL		/* Fast RC Osc w/Div-by-N */
+		#pragma config FPLLODIV = DIV_2		/* PLL configured for 48MHz clock */
+		#pragma config FPLLMUL = MUL_24
+		#pragma config FPLLIDIV = DIV_2
+		#pragma config FPBDIV = DIV_1		/* Peripheral Clock Divisor */
+		#pragma config IESO = ON			/* Internal/External Switch Over enabled */
+		#pragma config FSOSCEN = OFF		/* Secondary Oscillator disabled */
+		#pragma config CP = OFF				/* Code Protect Disabled */
+		#pragma config FWDTEN = ON			/* Watchdog Timer Enable */
+		#pragma config WDTPS = PS4096		/* Watchdog Timer Postscaler */
+		#pragma config PMDL1WAY = OFF		/* Allow multiple PM configurations */
+		#pragma config IOL1WAY = OFF		/* Allow multiple PPS configurations */
+	#endif
 	
 	
 	// preformance config 

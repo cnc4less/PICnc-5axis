@@ -6,19 +6,19 @@ S		= $(H)
 vpath %.c $(M):$(S)
 
 ifndef GCCPREFIX
-    GCCPREFIX   = /usr/local/pic32-tools/bin/pic32-
+    GCCPREFIX   = D:\\MinGW\\msys\\1.0\\home\\wireb\\pic32-tools\\bin\\pic32-
 endif
 
 DEFS		+= -I. -I$(H)
 
-LDRFILE		= bare-metal_32MX150F128B.ld 
+LDRFILE		= bare-metal_32MX150F128D.ld 
 
 
 DEPFLAGS	= -MT $@ -MD -MP -MF .deps/$*.dep
 CFLAGS		= -O $(DEFS) $(DEPFLAGS)
 ASFLAGS		= $(DEFS) $(DEPFLAGS)
 
-DEVICE	= 32MX150F128B
+DEVICE	= 32MX150F128D
 
 AVRDUDE = ../mpide-0023-linux-20120903/hardware/tools/avrdude
 AVRDUDECONF = -C ../mpide-0023-linux-20120903/hardware/tools/avrdude.conf -c stk500v2 \
@@ -31,7 +31,7 @@ CC		= $(GCCPREFIX)gcc -EL -g -mips32r2 -mprocessor=$(DEVICE) -O3
 CC		+= -Wextra -Wall -fno-exceptions -ffunction-sections
 CC		+= -fdata-sections -mno-smart-io 
 
-LDFLAGS         += -T $(LDRFILE) -lc -lm -Wl,-Map=picnc.map,--gc-sections
+LDFLAGS         += -T $(LDRFILE) -lc -lm -Wl,-Map=picnc-5axis.map,--gc-sections
 
 SIZE		= $(GCCPREFIX)size
 OBJDUMP		= $(GCCPREFIX)objdump
@@ -44,8 +44,8 @@ SRCOBJ	= main.o stepgen.o
 
 .SUFFIXES:	.hex .dis .c .elf .o
 
-all:		.deps picnc.elf picnc.hex
-		$(SIZE) picnc.elf
+all:		.deps picnc-5axis.elf picnc-5axis.hex
+		$(SIZE) picnc-5axis.elf
 clean:
 		rm -rf .deps *.o *.elf *.bin *.dis *.map *.hex *.dep
 
@@ -53,14 +53,14 @@ clean:
 		mkdir .deps
 
 
-picnc.elf:	$(SRCOBJ) $(LDRFILE)
+picnc-5axis.elf:	$(SRCOBJ) $(LDRFILE)
 		$(CC) $(LDFLAGS) $(SRCOBJ) -o $@
 		chmod -x $@
-		$(OBJDUMP) -d -S $@ > picnc.dis
+		$(OBJDUMP) -d -S $@ > picnc-5axis.dis
 		$(BIN2HEX) $@
 
 load:           .deps picnc.elf
-		$(PIC32PROG) $(PIC32PROGCONF) picnc.hex
+		$(PIC32PROG) $(PIC32PROGCONF) picnc-5axis.hex
 
 .o.dis:
 		$(OBJDUMP) -d -z -S $< > $@

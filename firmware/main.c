@@ -17,13 +17,14 @@
  *
  *    22OCT2014 PJS started changes to support the PICnc 5 axis hardware
  */
-
+ 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <plib.h>
 #include "hardware.h"
 #include "stepgen.h"
-
+	
 
 static volatile uint32_t rxBuf[BUFSIZE], txBuf[BUFSIZE];
 static volatile int spi_data_ready;
