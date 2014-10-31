@@ -181,7 +181,7 @@ static inline void update_outputs(uint32_t x){
 	}else{
 		IO_OUT9_LO;
 	}
-	#ifndef CONFIGURE_B_AXIS
+	#if MAXGEN < 5 /* CONFIGURE_B_AXIS */
 		if (x & (1 << 9)){
 			IO_OUT10_HI;
 		}else{
@@ -192,8 +192,8 @@ static inline void update_outputs(uint32_t x){
 		}else{
 			IO_OUT11_LO;
 		}
-	#endif /* CONFIGURE_B_AXIS */
-	#ifndef CONFIGURE_A_AXIS
+	#endif 
+	#if MAXGEN < 4 /* CONFIGURE_A_AXIS */
 		if (x & (1 << 11)){
 			IO_OUT12_HI;
 		}else{
@@ -204,8 +204,8 @@ static inline void update_outputs(uint32_t x){
 		}else{
 			IO_OUT13_LO;
 		}
-	#endif /* CONFIGURE_A_AXIS */
-	#ifndef CONFIGURE_z_AXIS
+	#endif 
+	#if MAXGEN < 3 /* CONFIGURE_Z_AXIS */
 		if (x & (1 << 13)){
 			IO_OUT14_HI;
 		}else{
@@ -216,8 +216,8 @@ static inline void update_outputs(uint32_t x){
 		}else{
 			IO_OUT15_LO;
 		}
-	#endif /* CONFIGURE_Z_AXIS */
-	#ifndef CONFIGURE_Y_AXIS
+	#endif 
+	#if MAXGEN < 2 /* CONFIGURE_Y_AXIS */
 		if (x & (1 << 15)){
 			IO_OUT16_HI;
 		}else{
@@ -228,8 +228,8 @@ static inline void update_outputs(uint32_t x){
 		}else{
 			IO_OUT17_LO;
 		}
-	#endif /* CONFIGURE_Y_AXIS */
-	#ifndef CONFIGURE_X_AXIS
+	#endif 
+	#if MAXGEN < 1 /* CONFIGURE_X_AXIS */
 		if (x & (1 << 17)){
 			IO_OUT18_HI;
 		}else{

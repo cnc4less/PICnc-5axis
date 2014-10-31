@@ -147,48 +147,96 @@ void stepgen(void)
 
 __inline__ void step_hi(int i)
 {
+#if MAXGEN >= 1
 	if (i == 0)
 		STEP_X_HI;
+#endif
+#if MAXGEN >= 2
 	if (i == 1)
 		STEP_Y_HI;
+#endif
+#if MAXGEN >= 3		
 	if (i == 2)
 		STEP_Z_HI;
+#endif
+#if MAXGEN >= 4
 	if (i == 3)
 		STEP_A_HI;
+#endif
+#if MAXGEN >= 5
+	if (i == 4)
+		STEP_B_HI;
+#endif
 }
 
 __inline__ void step_lo(int i)
 {
+#if MAXGEN >= 1
 	if (i == 0)
 		STEP_X_LO;
+#endif
+#if MAXGEN >= 2
 	if (i == 1)
 		STEP_Y_LO;
+#endif
+#if MAXGEN >= 3		
 	if (i == 2)
 		STEP_Z_LO;
+#endif
+#if MAXGEN >= 4
 	if (i == 3)
 		STEP_A_LO;
+#endif
+#if MAXGEN >= 5
+	if (i == 4)
+		STEP_B_LO;
+#endif
 }
 
 __inline__ void dir_hi(int i)
 {
+#if MAXGEN >= 1
 	if (i == 0)
 		DIR_X_HI;
+#endif
+#if MAXGEN >= 2
 	if (i == 1)
 		DIR_Y_HI;
+#endif
+#if MAXGEN >= 3		
 	if (i == 2)
 		DIR_Z_HI;
+#endif
+#if MAXGEN >= 4
 	if (i == 3)
 		DIR_A_HI;
+#endif
+#if MAXGEN >= 5
+	if (i == 4)
+		DIR_B_HI;
+#endif
 }
 
 __inline__ void dir_lo(int i)
 {
+#if MAXGEN >= 1
 	if (i == 0)
 		DIR_X_LO;
+#endif
+#if MAXGEN >= 2
 	if (i == 1)
 		DIR_Y_LO;
+#endif
+#if MAXGEN >= 3		
 	if (i == 2)
 		DIR_Z_LO;
+#endif
+#if MAXGEN >= 4
 	if (i == 3)
 		DIR_A_LO;
+#endif
+#if MAXGEN >= 5
+	if (i == 4)
+		DIR_B_LO;
+#endif
 }

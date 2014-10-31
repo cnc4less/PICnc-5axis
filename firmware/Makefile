@@ -20,16 +20,12 @@ ASFLAGS		= $(DEFS) $(DEPFLAGS)
 
 DEVICE	= 32MX150F128D
 
-AVRDUDE = ../mpide-0023-linux-20120903/hardware/tools/avrdude
-AVRDUDECONF = -C ../mpide-0023-linux-20120903/hardware/tools/avrdude.conf -c stk500v2 \
-		-p pic32 -P /dev/ttyUSB0 -q -q
-
 PIC32PROG = /usr/local/bin/pic32prog
 PIC32PROGCONF = 
 
 CC		= $(GCCPREFIX)gcc -EL -g -mips32r2 -mprocessor=$(DEVICE) -O3
 CC		+= -Wextra -Wall -fno-exceptions -ffunction-sections
-CC		+= -fdata-sections -mno-smart-io 
+CC		+= -fdata-sections -mno-smart-io
 
 LDFLAGS         += -T $(LDRFILE) -lc -lm -Wl,-Map=picnc-5axis.map,--gc-sections
 

@@ -26,17 +26,10 @@
 	// #####################################
 	// Update the code to decide which channels to configure for stepgen based off this define
 	// Set the number of active stepgen channels starting with X -> Y -> Z -> A -> B (note 5 is the max defined) 
-	#define MAXGEN		5
-
-
-	// comment out any of the following 5 lines that you don't want used as a step / direction driver
-	// Any channel commented out will be set up as a pair of normal outputs. 
-	#define CONFIGURE_X_AXIS
-	#define CONFIGURE_Y_AXIS
-	#define CONFIGURE_Z_AXIS
-	#define CONFIGURE_A_AXIS
-	#define CONFIGURE_B_AXIS
-	
+	// this can be set up via -D options in the make file 
+	#ifndef MAXGEN
+		#define MAXGEN		5	
+	#endif
 	
 	// PJS 22OCT2014 removing the status led for now may make it a compile option in the future... 
 	//#define LED_TOGGLE	(LATCINV = BIT_4)
@@ -49,7 +42,7 @@
 	// #####################################
 	// End user configuration defs
 	// #####################################
-
+	
 	// set the chip fuses
 	#ifndef __NO_FUSE__
 		#pragma config POSCMOD = OFF		/* Primary Oscillator disabled */
@@ -162,31 +155,31 @@
 	#define IO_OUT8_HI		(LATBSET = BIT_2)
 	#define IO_OUT9_LO		(LATBCLR = BIT_3)
 	#define IO_OUT9_HI		(LATBSET = BIT_3)
-	#ifndef CONFIGURE_B_AXIS
+	#if MAXGEN < 5
 		#define IO_OUT10_LO		(LATCCLR = BIT_0)
 		#define IO_OUT10_HI		(LATCSET = BIT_0)
 		#define IO_OUT11_LO		(LATCCLR = BIT_1)
 		#define IO_OUT11_HI		(LATCSET = BIT_1)
 	#endif /* CONFIGURE_B_AXIS */
-	#ifndef CONFIGURE_A_AXIS
+	#if MAXGEN < 4
 		#define IO_OUT12_LO		(LATCCLR = BIT_2)
 		#define IO_OUT12_HI		(LATCSET = BIT_2)
 		#define IO_OUT13_LO		(LATACLR = BIT_2)
 		#define IO_OUT13_HI		(LATASET = BIT_2)
 	#endif /* CONFIGURE_A_AXIS */
-	#ifndef CONFIGURE_z_AXIS
+	#if MAXGEN < 3
 		#define IO_OUT14_LO		(LATACLR = BIT_3)
 		#define IO_OUT14_HI		(LATASET = BIT_3)
 		#define IO_OUT15_LO		(LATACLR = BIT_8)
 		#define IO_OUT15_HI		(LATASET = BIT_8)
 	#endif /* CONFIGURE_Z_AXIS */
-	#ifndef CONFIGURE_Y_AXIS
+	#if MAXGEN < 2
 		#define IO_OUT16_LO		(LATBCLR = BIT_4)
 		#define IO_OUT16_HI		(LATBSET = BIT_4)
 		#define IO_OUT17_LO		(LATACLR = BIT_4)
 		#define IO_OUT17_HI		(LATASET = BIT_4)
 	#endif /* CONFIGURE_Y_AXIS */
-	#ifndef CONFIGURE_X_AXIS
+	#if MAXGEN < 1
 		#define IO_OUT18_LO		(LATACLR = BIT_9)
 		#define IO_OUT18_HI		(LATASET = BIT_9)
 		#define IO_OUT19_LO		(LATCCLR = BIT_3)
@@ -195,35 +188,35 @@
 
 	
 	// step/dir pin definitions
-	#ifdef CONFIGURE_X_AXIS
+	#if MAXGEN >= 1
 		#define STEP_X_LO		(LATCCLR = BIT_3)
 		#define STEP_X_HI		(LATCSET = BIT_3)
 		#define DIR_X_LO		(LATACLR = BIT_9)
 		#define DIR_X_HI		(LATASET = BIT_9)
 	#endif /* CONFIGURE_X_AXIS */
 	
-	#ifdef CONFIGURE_Y_AXIS
+	#if MAXGEN >= 2
 		#define STEP_Y_LO		(LATACLR = BIT_4)
 		#define STEP_Y_HI		(LATASET = BIT_4)
 		#define DIR_Y_LO		(LATBCLR = BIT_4)
 		#define DIR_Y_HI		(LATBSET = BIT_4)
 	#endif /* CONFIGURE_Y_AXIS */
 	
-	#ifdef CONFIGURE_Z_AXIS
+	#if MAXGEN >= 3
 		#define STEP_Z_LO		(LATACLR = BIT_8)
 		#define STEP_Z_HI		(LATASET = BIT_8)
 		#define DIR_Z_LO		(LATACLR = BIT_3)
 		#define DIR_Z_HI		(LATASET = BIT_3)
 	#endif /* CONFIGURE_Z_AXIS */
 	
-	#ifdef CONFIGURE_A_AXIS
+	#if MAXGEN >= 4
 		#define STEP_A_LO		(LATACLR = BIT_2)
 		#define STEP_A_HI		(LATASET = BIT_2)
 		#define DIR_A_LO		(LATCCLR = BIT_2)
 		#define DIR_A_HI		(LATCSET = BIT_2)
 	#endif /* CONFIGURE_A_AXIS */
 	
-	#ifdef CONFIGURE_B_AXIS
+	#if MAXGEN >= 5
 		#define STEP_B_LO		(LATCCLR = BIT_1)
 		#define STEP_B_HI		(LATCSET = BIT_1)
 		#define DIR_B_LO		(LATCCLR = BIT_0)

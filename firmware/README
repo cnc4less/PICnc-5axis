@@ -10,7 +10,12 @@ Main user configurable changes are limited to hardware.h under "user configurati
 
 -- Build enviroment OS: Windows --
 
-<todo add build enviroment setup instructions here>
+https://docs.google.com/document/d/1CtgTrrLEOsR1H3iEH10whMRTEpvrqWoOKMr9ofaBiBs/edit?usp=sharing
+
+Note if you just want to program a card as is you can skip this setup and just use one of the precompiled images:
+PICnc-5axis.hex => Axis X, Y, Z, A, B enabled
+PICnc-4axis.hex => Axis X, Y, Z, A enabled (unused axis as two GPIO outputs each)
+PICnc-3axis.hex => Axis X, Y enabled (unused axis as two GPIO outputs each)
 
 
 -- Programing enviroment OS: Windows --
