@@ -53,18 +53,18 @@ typedef struct {
 				*mist_enable,
 				*flood_enable,
 				// inputs
-	            *in1,
-	            *in2,
-	            *in3,
-	            *in4,
-	            *in5,
-	            *in6,
-	            *in7,
-	            *in8,
-	            *in9,
-	            *in10,
-	            *in11,
-	            *in12,
+	            *in1,	//stop
+	            *in2,	//EPO
+	            *in3,	//I2C fault
+	            *in4,	//door
+	            *in5,	//laser off
+	            *in6,	//A block
+	            *in7,	
+	            *in8,	//B home
+	            *in9,	//A home
+	            *in10,	//Z home
+	            *in11,	//Y home
+	            *in12,	//X home
 	            *ready,
 				*spi_fault;
 	hal_float_t scale[NUMAXES],
@@ -172,6 +172,7 @@ int rtapi_app_main(void)
 		data->maxaccel[n] = 1.0;
 	}
 
+	// inputs
 	retval = hal_pin_bit_newf(HAL_OUT, &(data->in1), comp_id, "%s.in.1", prefix);
 	if (retval < 0) goto error;
 	*(data->in1) = 0;
@@ -220,6 +221,7 @@ int rtapi_app_main(void)
 	if (retval < 0) goto error;
 	*(data->in12) = 0;
 
+	// outputs
 	retval = hal_pin_bit_newf(HAL_IN, &(data->output_enable), comp_id, "%s.out.enable", prefix);
 	if (retval < 0) goto error;
 	*(data->output_enable) = 0;
@@ -236,6 +238,7 @@ int rtapi_app_main(void)
 	if (retval < 0) goto error;
 	*(data->flood_enable) = 0;
 
+	// virtual pins for control/status
 	retval = hal_pin_bit_newf(HAL_OUT, &(data->ready), comp_id, "%s.ready", prefix);
 	if (retval < 0) goto error;
 	*(data->ready) = 0;
