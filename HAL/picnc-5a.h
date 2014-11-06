@@ -13,13 +13,17 @@
  *    You should have received a copy of the GNU General Public License
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ *		06NOV2014 V0.1 PJS updated names and removed overclocking (48MHz -> 40MHz) 
  */
 
-#ifndef PICNC_H
-	#define PICNC_H
+#ifndef PICNC-5A_H
+	#define PICNC-5A_H
+	
+	#define NUMAXES				4		/* X Y Z A B max 5 make sure this matches your firmware hardware.h def!!*/
+
 	
 	#define SPICLKDIV			32		/* ~8 Mhz */
-	#define NUMAXES				4		/* X Y Z */
 	
 	#define REQ_TIMEOUT			10000ul
 	
@@ -30,7 +34,7 @@
 	#define STEP_MASK			(1<<STEPBIT)
 	
 	#define BASEFREQ			80000ul		/* Base freq of the PIC stepgen in Hz */
-	#define SYS_FREQ			(48000000ul)    /* 48 MHz */
+	#define SYS_FREQ			(40000000ul)    /* 40 MHz */
 	
 	#define PERIODFP 			((double)1.0 / (double)(BASEFREQ))
 	#define VELSCALE			((double)STEP_MASK * PERIODFP)

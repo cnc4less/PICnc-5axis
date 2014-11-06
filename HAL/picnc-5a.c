@@ -17,6 +17,7 @@
  *    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  *
  *    V0.1 PJS 05NOV2014 updates for PICnc 5axis boards
+ *    V0.2 PJS 05NOV2014 converted the output names and added the remaining outputs 
  */
 
 #include "rtapi.h"
@@ -28,14 +29,14 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "picnc.h"
+#include "picnc-5a.h"
 
 #if !defined(BUILD_SYS_USER_DSO)
 #error "This driver is for usermode threads only"
 #endif
 
-#define MODNAME "picnc"
-#define PREFIX "picnc"
+#define MODNAME "picnc-5a"
+#define PREFIX "picnc-5a"
 
 MODULE_AUTHOR("GP Orcullo modified by P. Shabino");
 MODULE_DESCRIPTION("Driver for PICnc 5axis boards");
@@ -44,27 +45,53 @@ MODULE_LICENSE("GPL v2");
 static int stepwidth = 1;
 RTAPI_MP_INT(stepwidth, "Step width in 1/BASEFREQ");
 
-typedef struct {
+typedef struct{
 	hal_float_t *position_cmd[NUMAXES],
 	            *velocity_cmd[NUMAXES],
 	            *position_fb[NUMAXES];
-	hal_bit_t   *output_enable,
-				*spindle_enable,
-				*mist_enable,
-				*flood_enable,
+	hal_bit_t   // outputs
+				*out1,		//enable
+				*out2,		//beeper 
+				*out3,  	//Laser fire
+				*out4,  	//PWM Laser power
+				*out5,  	//PWM Lights
+				*out6,  	//PWM Air valve
+				*out7,  	//PS on
+				*out8,  	
+				*out9,  	
+			#if NUMAXES < 5 /* CONFIGURE_B_AXIS */
+				*out10,  	//Bdir
+				*out11,  	//Bstep
+			#endif /* CONFIGURE_B_AXIS */
+			#if NUMAXES < 4 /* CONFIGURE_A_AXIS */
+				*out12,  	//Adir
+				*out13,  	//Astep
+			#endif /* CONFIGURE_A_AXIS */
+			#if NUMAXES < 3 /* CONFIGURE_Z_AXIS */
+				*out14,  	//Zdir
+				*out15,  	//Zstep
+			#endif /* CONFIGURE_Z_AXIS */
+			#if NUMAXES < 2 /* CONFIGURE_Y_AXIS */
+				*out16,  	//Ydir
+				*out17,  	//Ystep
+			#endif /* CONFIGURE_Y_AXIS */
+			#if NUMAXES < 1 /* CONFIGURE_X_AXIS */
+				*out18,  	//Xdir
+				*out19,  	//Xstep
+			#endif /* CONFIGURE_X_AXIS */
 				// inputs
-	            *in1,	//stop
-	            *in2,	//EPO
-	            *in3,	//I2C fault
-	            *in4,	//door
-	            *in5,	//laser off
-	            *in6,	//A block
+	            *in1,		//stop
+	            *in2,		//EPO
+	            *in3,		//I2C fault
+	            *in4,		//door
+	            *in5,		//laser off
+	            *in6,		//A block
 	            *in7,	
-	            *in8,	//B home
-	            *in9,	//A home
-	            *in10,	//Z home
-	            *in11,	//Y home
-	            *in12,	//X home
+	            *in8,		//B home
+	            *in9,		//A home
+	            *in10,		//Z home
+	            *in11,		//Y home
+	            *in12,		//X home
 	            *ready,
 				*spi_fault;
 	hal_float_t scale[NUMAXES],
@@ -106,8 +133,7 @@ static int map_gpio();
 static void setup_gpio();
 static void restore_gpio();
 
-int rtapi_app_main(void)
-{
+int rtapi_app_main(void){
 	char name[HAL_NAME_LEN + 1];
 	int n, retval;
 
@@ -145,7 +171,7 @@ int rtapi_app_main(void)
 	max_vel = BASEFREQ/(4.0 * stepwidth);	/* calculate velocity limit */
 
 	/* export pins and parameters */
-	for (n=0; n<NUMAXES; n++) {
+	for (n=0; n<NUMAXES; n++){
 		retval = hal_pin_float_newf(HAL_IN, &(data->position_cmd[n]),
 		        comp_id, "%s.axis.%01d.position-cmd", prefix, n);
 		if (retval < 0) goto error;
@@ -222,21 +248,86 @@ int rtapi_app_main(void)
 	*(data->in12) = 0;
 
 	// outputs
-	retval = hal_pin_bit_newf(HAL_IN, &(data->output_enable), comp_id, "%s.out.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out1), comp_id, "%s.out.1", prefix);
 	if (retval < 0) goto error;
-	*(data->output_enable) = 0;
+	*(data->out1) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->spindle_enable), comp_id, "%s.spindle.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out2), comp_id, "%s.out.2", prefix);
 	if (retval < 0) goto error;
-	*(data->spindle_enable) = 0;
+	*(data->out2) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->mist_enable), comp_id, "%s.mist.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out3), comp_id, "%s.out.3", prefix);
 	if (retval < 0) goto error;
-	*(data->mist_enable) = 0;
+	*(data->out3) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->flood_enable), comp_id, "%s.flood.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out4), comp_id, "%s.out.4", prefix);
 	if (retval < 0) goto error;
-	*(data->flood_enable) = 0;
+	*(data->out4) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out5), comp_id, "%s.out.5", prefix);
+	if (retval < 0) goto error;
+	*(data->out5) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out6), comp_id, "%s.out.6", prefix);
+	if (retval < 0) goto error;
+	*(data->out6) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out7), comp_id, "%s.out.7", prefix);
+	if (retval < 0) goto error;
+	*(data->out7) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out8), comp_id, "%s.out.8", prefix);
+	if (retval < 0) goto error;
+	*(data->out8) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out9), comp_id, "%s.out.9", prefix);
+	if (retval < 0) goto error;
+	*(data->out9) = 0;
+#if NUMAXES < 5 /* CONFIGURE_B_AXIS */
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out10), comp_id, "%s.out.10", prefix);
+	if (retval < 0) goto error;
+	*(data->out10) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out11), comp_id, "%s.out.11", prefix);
+	if (retval < 0) goto error;
+	*(data->out11) = 0;
+#endif /* CONFIGURE_B_AXIS */
+#if NUMAXES < 4 /* CONFIGURE_A_AXIS */
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out12), comp_id, "%s.out.12", prefix);
+	if (retval < 0) goto error;
+	*(data->out12) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out13), comp_id, "%s.out.13", prefix);
+	if (retval < 0) goto error;
+	*(data->out13) = 0;
+#endif /* CONFIGURE_A_AXIS */
+#if NUMAXES < 3 /* CONFIGURE_Z_AXIS */
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out14), comp_id, "%s.out.14", prefix);
+	if (retval < 0) goto error;
+	*(data->out14) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out15), comp_id, "%s.out.15", prefix);
+	if (retval < 0) goto error;
+	*(data->out15) = 0;
+#endif /* CONFIGURE_Z_AXIS */
+#if NUMAXES < 2 /* CONFIGURE_Y_AXIS */
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out16), comp_id, "%s.out.16", prefix);
+	if (retval < 0) goto error;
+	*(data->out16) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out17), comp_id, "%s.out.17", prefix);
+	if (retval < 0) goto error;
+	*(data->out17) = 0;
+#endif /* CONFIGURE_Y_AXIS */
+#if NUMAXES < 1 /* CONFIGURE_X_AXIS */
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out18), comp_id, "%s.out.18", prefix);
+	if (retval < 0) goto error;
+	*(data->out18) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->out19), comp_id, "%s.out.19", prefix);
+	if (retval < 0) goto error;
+	*(data->out19) = 0;
+#endif /* CONFIGURE_X_AXIS */
 
 	// virtual pins for control/status
 	retval = hal_pin_bit_newf(HAL_OUT, &(data->ready), comp_id, "%s.ready", prefix);
@@ -291,16 +382,14 @@ error:
 	return 0;
 }
 
-void rtapi_app_exit(void)
-{
+void rtapi_app_exit(void){
 	restore_gpio();
 	munmap((void *)gpio,BLOCK_SIZE);
 	munmap((void *)spi,BLOCK_SIZE);
 	hal_exit(comp_id);
 }
 
-void read_spi(void *arg, long period)
-{
+void read_spi(void *arg, long period){
 	int i;
 	static int startup = 0;
 	data_t *dat = (data_t *)arg;
@@ -359,13 +448,11 @@ void read_spi(void *arg, long period)
 	}
 }
 
-void write_spi(void *arg, long period)
-{
+void write_spi(void *arg, long period){
 	write_buf();
 }
 
-void update(void *arg, long period)
-{
+void update(void *arg, long period){
 	int i;
 	data_t *dat = (data_t *)arg;
 	double max_accl, vel_cmd, dv, new_vel,
@@ -467,21 +554,43 @@ void update(void *arg, long period)
 	txBuf[0] = 0x314D433E;
 }
 
-void update_outputs(data_t *dat)
-{
-	float duty;
-	int i;
+void update_outputs(data_t *dat){
+	//pjs float duty;
+	//pjs int i;
 
 	/* update pic32 output */
-	txBuf[1]  = (*(dat->spindle_enable) ? 1l : 0) << 0;
-	txBuf[1] |= (*(dat->mist_enable) ? 1l : 0) << 1;
-	txBuf[1] |= (*(dat->flood_enable) ? 1l : 0) << 2;
-	txBuf[1] |= (*(dat->output_enable) ? 1l : 0) << 3;
-
+	txBuf[1]  = (*(dat->out1) ? 1l : 0) << 0;
+	txBuf[1] |= (*(dat->out2) ? 1l : 0) << 1;
+	txBuf[1] |= (*(dat->out3) ? 1l : 0) << 2;
+	txBuf[1] |= (*(dat->out4) ? 1l : 0) << 3;
+	txBuf[1] |= (*(dat->out5) ? 1l : 0) << 4;
+	txBuf[1] |= (*(dat->out6) ? 1l : 0) << 5;
+	txBuf[1] |= (*(dat->out7) ? 1l : 0) << 6;
+	txBuf[1] |= (*(dat->out8) ? 1l : 0) << 7;
+	txBuf[1] |= (*(dat->out9) ? 1l : 0) << 8;
+#if NUMAXES < 5 /* CONFIGURE_B_AXIS */
+	txBuf[1] |= (*(dat->out10) ? 1l : 0) << 9;
+	txBuf[1] |= (*(dat->out11) ? 1l : 0) << 10;
+#endif /* CONFIGURE_B_AXIS */
+#if NUMAXES < 4 /* CONFIGURE_A_AXIS */
+	txBuf[1] |= (*(dat->out12) ? 1l : 0) << 11;
+	txBuf[1] |= (*(dat->out13) ? 1l : 0) << 12;
+#endif /* CONFIGURE_A_AXIS */
+#if NUMAXES < 3 /* CONFIGURE_Z_AXIS */
+	txBuf[1] |= (*(dat->out14) ? 1l : 0) << 13;
+	txBuf[1] |= (*(dat->out15) ? 1l : 0) << 14;
+#endif /* CONFIGURE_Z_AXIS */
+#if NUMAXES < 2 /* CONFIGURE_Y_AXIS */
+	txBuf[1] |= (*(dat->out16) ? 1l : 0) << 15;
+	txBuf[1] |= (*(dat->out17) ? 1l : 0) << 16;
+#endif /* CONFIGURE_Y_AXIS */
+#if NUMAXES < 1 /* CONFIGURE_X_AXIS */
+	txBuf[1] |= (*(dat->out18) ? 1l : 0) << 17;
+	txBuf[1] |= (*(dat->out19) ? 1l : 0) << 18;
+#endif /* CONFIGURE_X_AXIS */
 }
 
-static s32 debounce(s32 A)
-{
+static s32 debounce(s32 A){
 	static s32 B = 0;
 	static s32 C = 0;
 	static s32 Z = 0;
@@ -493,9 +602,8 @@ static s32 debounce(s32 A)
 	return Z;
 }
 
-void update_inputs(data_t *dat)
-{
-	int i;
+void update_inputs(data_t *dat){
+	//pjs int i;
 	s32 x;
 
 	x = debounce(rxBuf[1]);
@@ -514,8 +622,7 @@ void update_inputs(data_t *dat)
 	*(dat->in12) = (x & 0b100000000000) ? 1 : 0;
 }
 
-void read_buf()
-{
+void read_buf(){
 	char *buf;
 	int i;
 
@@ -527,8 +634,7 @@ void read_buf()
 
 }
 
-void write_buf()
-{
+void write_buf(){
 	char *buf;
 	int i;
 
@@ -549,8 +655,7 @@ void write_buf()
 
 }
 
-int map_gpio()
-{
+int map_gpio(){
 	int fd;
 
 	fd = open("/dev/mem", O_RDWR | O_SYNC);
@@ -593,21 +698,20 @@ int map_gpio()
 	return 0;
 }
 
-/*    GPIO USAGE
- *
- *	GPIO	Dir	Signal
- *
- *	8	OUT	CE0
- *	9	IN	MISO
- *	10	OUT	MOSI
- *	11	OUT	SCLK
- *
- */
-
-void setup_gpio()
-{
+void setup_gpio(){
 	u32 x;
 
+	/*    GPIO USAGE
+	 *
+	 *	GPIO	Dir	Signal
+	 *
+	 *	8	OUT	CE0
+	 *	9	IN	MISO
+	 *	10	OUT	MOSI
+	 *	11	OUT	SCLK
+	 *
+	 */
+	 
 	/* change SPI pins */
 	x = BCM2835_GPFSEL0;
 	x &= ~(0b111 << (8*3) | 0b111 << (9*3));
@@ -628,8 +732,7 @@ void setup_gpio()
 	BCM2835_SPICS |= SPI_CS_CLEAR_RX | SPI_CS_CLEAR_TX;
 }
 
-void restore_gpio()
-{
+void restore_gpio(){
 	u32 x;
 
 	/* change all used pins back to inputs */
