@@ -28,7 +28,7 @@
 	// Set the number of active stepgen channels starting with X -> Y -> Z -> A -> B (note 5 is the max defined) 
 	// this can be set up via -D options in the make file 
 	#ifndef MAXGEN
-		#define MAXGEN		5	
+		#define MAXGEN		4	
 	#endif
 	
 	// PJS 22OCT2014 removing the status led for now may make it a compile option in the future... 
@@ -134,7 +134,7 @@
 	#define IO_IN9			(PORTCbits.RC7)
 	#define IO_IN10			(PORTCbits.RC8)
 	#define IO_IN11			(PORTCbits.RC9)
-	#define IO_IN12			(PORTBbits.RB8)
+	#define IO_IN12			(PORTBbits.RB10)
 	
 	// output pin definitions
 	#define IO_OUT1_LO		(LATBCLR = BIT_12)
