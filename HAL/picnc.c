@@ -15,6 +15,8 @@
  *    You should have received a copy of the GNU General Public License
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ *
+ *    V0.1 PJS 05NOV2014 updates for PICnc 5axis boards
  */
 
 #include "rtapi.h"
@@ -35,8 +37,8 @@
 #define MODNAME "picnc"
 #define PREFIX "picnc"
 
-MODULE_AUTHOR("GP Orcullo");
-MODULE_DESCRIPTION("Driver for PICnc V2 boards");
+MODULE_AUTHOR("GP Orcullo modified by P. Shabino");
+MODULE_DESCRIPTION("Driver for PICnc 5axis boards");
 MODULE_LICENSE("GPL v2");
 
 static int stepwidth = 1;
@@ -47,16 +49,24 @@ typedef struct {
 	            *velocity_cmd[NUMAXES],
 	            *position_fb[NUMAXES];
 	hal_bit_t   *output_enable,
-		    *spindle_enable,
-		    *mist_enable,
-		    *flood_enable,
-	            *home_x,
-	            *home_y,
-	            *home_z,
-	            *home_a,
-		    *stop,
+				*spindle_enable,
+				*mist_enable,
+				*flood_enable,
+				// inputs
+	            *in1,
+	            *in2,
+	            *in3,
+	            *in4,
+	            *in5,
+	            *in6,
+	            *in7,
+	            *in8,
+	            *in9,
+	            *in10,
+	            *in11,
+	            *in12,
 	            *ready,
-		    *spi_fault;
+				*spi_fault;
 	hal_float_t scale[NUMAXES],
 	            maxaccel[NUMAXES];
 	hal_u32_t   *test;
@@ -162,63 +172,79 @@ int rtapi_app_main(void)
 		data->maxaccel[n] = 1.0;
 	}
 
-	retval = hal_pin_bit_newf(HAL_OUT, &(data->home_x), comp_id,
-	        "%s.axis.0.home", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in1), comp_id, "%s.in.1", prefix);
 	if (retval < 0) goto error;
-	*(data->home_x) = 0;
+	*(data->in1) = 0;
 
-	retval = hal_pin_bit_newf(HAL_OUT, &(data->home_y), comp_id,
-	        "%s.axis.1.home", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in2), comp_id, "%s.in.2", prefix);
 	if (retval < 0) goto error;
-	*(data->home_y) = 0;
+	*(data->in2) = 0;
 
-	retval = hal_pin_bit_newf(HAL_OUT, &(data->home_z), comp_id,
-	        "%s.axis.2.home", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in3), comp_id, "%s.in.3", prefix);
 	if (retval < 0) goto error;
-	*(data->home_z) = 0;
+	*(data->in3) = 0;
 
-	retval = hal_pin_bit_newf(HAL_OUT, &(data->home_a), comp_id,
-	        "%s.axis.3.home", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in4), comp_id, "%s.in.4", prefix);
 	if (retval < 0) goto error;
-	*(data->home_z) = 0;
+	*(data->in4) = 0;
 
-	retval = hal_pin_bit_newf(HAL_OUT, &(data->stop), comp_id,
-	        "%s.in.stop", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in5), comp_id, "%s.in.5", prefix);
 	if (retval < 0) goto error;
-	*(data->stop) = 0;
+	*(data->in5) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->output_enable), comp_id,
-	        "%s.out.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in6), comp_id, "%s.in.6", prefix);
+	if (retval < 0) goto error;
+	*(data->in6) = 0;
+
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in7), comp_id, "%s.in.7", prefix);
+	if (retval < 0) goto error;
+	*(data->in7) = 0;
+
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in8), comp_id, "%s.in.8", prefix);
+	if (retval < 0) goto error;
+	*(data->in8) = 0;
+
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in9), comp_id, "%s.in.9", prefix);
+	if (retval < 0) goto error;
+	*(data->in9) = 0;
+
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in10), comp_id, "%s.in.10", prefix);
+	if (retval < 0) goto error;
+	*(data->in10) = 0;
+
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in11), comp_id, "%s.in.11", prefix);
+	if (retval < 0) goto error;
+	*(data->in11) = 0;
+
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->in12), comp_id, "%s.in.12", prefix);
+	if (retval < 0) goto error;
+	*(data->in12) = 0;
+
+	retval = hal_pin_bit_newf(HAL_IN, &(data->output_enable), comp_id, "%s.out.enable", prefix);
 	if (retval < 0) goto error;
 	*(data->output_enable) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->spindle_enable), comp_id,
-	        "%s.spindle.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->spindle_enable), comp_id, "%s.spindle.enable", prefix);
 	if (retval < 0) goto error;
 	*(data->spindle_enable) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->mist_enable), comp_id,
-	        "%s.mist.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->mist_enable), comp_id, "%s.mist.enable", prefix);
 	if (retval < 0) goto error;
 	*(data->mist_enable) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IN, &(data->flood_enable), comp_id,
-	        "%s.flood.enable", prefix);
+	retval = hal_pin_bit_newf(HAL_IN, &(data->flood_enable), comp_id, "%s.flood.enable", prefix);
 	if (retval < 0) goto error;
 	*(data->flood_enable) = 0;
 
-	retval = hal_pin_bit_newf(HAL_OUT, &(data->ready), comp_id,
-	        "%s.ready", prefix);
+	retval = hal_pin_bit_newf(HAL_OUT, &(data->ready), comp_id, "%s.ready", prefix);
 	if (retval < 0) goto error;
 	*(data->ready) = 0;
 
-	retval = hal_pin_bit_newf(HAL_IO, &(data->spi_fault), comp_id,
-	        "%s.spi_fault", prefix);
+	retval = hal_pin_bit_newf(HAL_IO, &(data->spi_fault), comp_id, "%s.spi_fault", prefix);
 	if (retval < 0) goto error;
 	*(data->spi_fault) = 0;
 
-	retval = hal_pin_u32_newf(HAL_IN, &(data->test), comp_id,
-	        "%s.test", prefix);
+	retval = hal_pin_u32_newf(HAL_IN, &(data->test), comp_id, "%s.test", prefix);
 	if (retval < 0) goto error;
 	*(data->test) = 0;
 error:
@@ -471,11 +497,18 @@ void update_inputs(data_t *dat)
 
 	x = debounce(rxBuf[1]);
 
-	*(dat->home_x)  = (x & 0b0000001) ? 1 : 0;
-	*(dat->home_y)  = (x & 0b0000010) ? 1 : 0;
-	*(dat->home_z)  = (x & 0b0000100) ? 1 : 0;
-	*(dat->home_a)  = (x & 0b0001000) ? 1 : 0;
-	*(dat->stop)    = (x & 0b0010000) ? 1 : 0;
+	*(dat->in1)  = (x & 0b000000000001) ? 1 : 0;
+	*(dat->in2)  = (x & 0b000000000010) ? 1 : 0;
+	*(dat->in3)  = (x & 0b000000000100) ? 1 : 0;
+	*(dat->in4)  = (x & 0b000000001000) ? 1 : 0;
+	*(dat->in5)  = (x & 0b000000010000) ? 1 : 0;
+	*(dat->in6)  = (x & 0b000000100000) ? 1 : 0;
+	*(dat->in7)  = (x & 0b000001000000) ? 1 : 0;
+	*(dat->in8)  = (x & 0b000010000000) ? 1 : 0;
+	*(dat->in9)  = (x & 0b000100000000) ? 1 : 0;
+	*(dat->in10) = (x & 0b001000000000) ? 1 : 0;
+	*(dat->in11) = (x & 0b010000000000) ? 1 : 0;
+	*(dat->in12) = (x & 0b100000000000) ? 1 : 0;
 }
 
 void read_buf()
