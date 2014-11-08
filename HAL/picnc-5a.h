@@ -17,8 +17,8 @@
  *		06NOV2014 V0.1 PJS updated names and removed overclocking (48MHz -> 40MHz) 
  */
 
-#ifndef PICNC-5A_H
-	#define PICNC-5A_H
+#ifndef PICNC_5A_H
+	#define PICNC_5A_H
 	
 	#define NUMAXES				4		/* X Y Z A B max 5 make sure this matches your firmware hardware.h def!!*/
 
@@ -94,4 +94,4 @@
 	#define PAGE_SIZE			(4*1024)
 	#define BLOCK_SIZE			(4*1024)
 
-#endif
+#endif /* PICNC_5A_H */

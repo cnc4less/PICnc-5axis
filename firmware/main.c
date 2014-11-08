@@ -16,6 +16,7 @@
  *
  *
  *    22OCT2014 PJS started changes to support the PICnc 5 axis hardware
+ *	  07NOV2014 PJS started adding hardware PWM support
  */
  
 #include <stdint.h>
@@ -44,10 +45,10 @@ static void map_peripherals(){
 
 	/* map SPI and PWM pins */
 	// TODO add code to enable the hardware PWM outputs if used
-	//PPSOutput(1, RPA0, OC1);	/* PWM (OUT4 laser power) */
-	//PPSOutput(2, RPA1, OC2);	/* PWM (OUT5 lights) */
-	//PPSOutput(3, RPB2, OC4);	/* PWM (OUT8) */
-	//PPSOutput(4, RPB0, OC3);	/* PWM (OUT6 air valve) */
+	PPSOutput(1, RPA0, OC1);	/* PWM (OUT4 laser power) */
+	PPSOutput(2, RPA1, OC2);	/* PWM (OUT5 lights) */
+	PPSOutput(3, RPB2, OC4);	/* PWM (OUT8) */
+	PPSOutput(4, RPB0, OC3);	/* PWM (OUT6 air valve) */
 
 	/* lock PPS sequence */
 	CFGCONbits.IOLOCK=1;		/* now it is locked */
@@ -243,6 +244,63 @@ static inline void update_outputs(uint32_t x){
 	#endif /* CONFIGURE_X_AXIS */
 }
 
+
+// this function sets up PWM
+static inline void update_PWM(){
+	// timer 2 setup 
+
+	// PWM engine 1
+	PC1CON = 0x0000;	// Turn off OCx while doing setup.
+	OC1R = 0x0000;		// Init comp reg
+	OC1RS = 0x0000;		// Init secondary reg
+	OC1CON = 0x0006;	// configure OC to PWM mode no fault pin
+
+	// PWM engine 2
+	PC2CON = 0x0000;	// Turn off OCx while doing setup.
+	OC2R = 0x0000;		// Init comp reg
+	OC2RS = 0x0000;		// Init secondary reg
+	OC2CON = 0x0006;	// configure OC to PWM mode no fault pin
+
+	// PWM engine 3
+	PC3CON = 0x0000;	// Turn off OCx while doing setup.
+	OC3R = 0x0000;		// Init comp reg
+	OC3RS = 0x0000;		// Init secondary reg
+	OC3CON = 0x0006;	// configure OC to PWM mode no fault pin
+
+	// PWM engine 4
+	PC4CON = 0x0000;	// Turn off OCx while doing setup.
+	OC4R = 0x0000;		// Init comp reg
+	OC4RS = 0x0000;		// Init secondary reg
+	OC4CON = 0x0006;	// configure OC to PWM mode no fault pin
+	
+	// turn on timer 2
+	T2CONSET = 0x8000
+	
+}
+
+
+// this function updates and enables the PWM channel 
+static inline void update_PWM(uint channel, uint32_t value){
+	switch (channel){
+		case 1:	
+			OC1RS = value;
+			OC1CONSET = 0x8000;
+			break;		
+		case 2:	
+			OC2RS = value;
+			OC2CONSET = 0x8000;			
+			break;		
+		case 3:	
+			OC3RS = value;
+			OC3CONSET = 0x8000;			
+			break;		
+		case 4:	
+			OC4RS = value;
+			OC4CONSET = 0x8000;			
+			break;		
+	}
+}
+
 void reset_board(){
 	stepgen_reset();
 	update_outputs(0); 		/* all outputs low */
@@ -302,6 +360,22 @@ int main(void){
 			case 0x324D433E:	/* >CM2 */
 				update_outputs(rxBuf[1]);
 				txBuf[1] = read_inputs();
+				break;
+			case 0x334D433E:	/* >CM3 PWM1*/
+				update_PWM(1, rxBuf[1]);
+				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
+				break;
+			case 0x334D433E:	/* >CM3 PWM2*/
+				update_PWM(2, rxBuf[1]);
+				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
+				break;
+			case 0x334D433E:	/* >CM3 PWM3*/
+				update_PWM(3, rxBuf[1]);
+				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
+				break;
+			case 0x334D433E:	/* >CM3 PWM4*/
+				update_PWM(4, rxBuf[1]);
+				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
 				break;
 			case 0x4746433E:	/* >CFG */
 				stepgen_update_stepwidth(rxBuf[1]);
