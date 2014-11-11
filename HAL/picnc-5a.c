@@ -28,6 +28,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "picnc-5a.h"
 
@@ -44,6 +46,9 @@ MODULE_LICENSE("GPL v2");
 
 static int stepwidth = 1;
 RTAPI_MP_INT(stepwidth, "Step width in 1/BASEFREQ");
+
+static long pwmfreq = 35000;
+RTAPI_MP_LONG(pwmfreq, "PWM frequency in Hz");
 
 typedef struct{
 	hal_float_t *position_cmd[NUMAXES],
@@ -133,10 +138,41 @@ static int map_gpio();
 static void setup_gpio();
 static void restore_gpio();
 
+int is_rpi(void){
+	FILE *fp;
+	char buf[1024];
+	size_t fsize;
+
+	fp = fopen("/proc/cpuinfo", "r");
+	fsize = fread(buf, 1, sizeof(buf), fp);
+	fclose(fp);
+	
+	if (fsize == 0 || fsize == sizeof(buf))
+		return 0;
+
+	/* NUL terminate the buffer */
+	buf[fsize] = '\0';
+
+	/* check if this is running on a broadcom chip */
+	if (NULL == strstr(buf, "BCM2708"))
+		return 0;
+	else
+		return -1;
+}
+
+
 int rtapi_app_main(void){
 	char name[HAL_NAME_LEN + 1];
 	int n, retval;
 
+	/* make sure we are running on an RPi */
+	if (!is_rpi()) {
+		rtapi_print_msg(RTAPI_MSG_ERR, 
+			"%s: ERROR: This driver is for the Raspberry Pi platform only\n",
+		        modname);
+		return -1;
+	}
+	
 	/* initialise driver */
 	comp_id = hal_init(modname);
 	if (comp_id < 0) {
@@ -163,9 +199,12 @@ int rtapi_app_main(void){
 	}
 
 	setup_gpio();
+	
+	pwm_period = (SYS_FREQ/pwmfreq) - 1;	/* PeripheralClock/pwmfreq - 1 */
 
 	txBuf[0] = 0x4746433E;		/* this is config data (>CFG) */
 	txBuf[1] = stepwidth;
+	txBuf[2] = pwm_period;
 	write_buf();			/* send config data */
 
 	max_vel = BASEFREQ/(4.0 * stepwidth);	/* calculate velocity limit */

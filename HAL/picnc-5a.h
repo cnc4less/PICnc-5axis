@@ -22,6 +22,9 @@
 	
 	#define NUMAXES				4		/* X Y Z A B max 5 make sure this matches your firmware hardware.h def!!*/
 
+
+
+	#define PWMCHANS			4		/* max of 4 supported by hardware */
 	
 	#define SPICLKDIV			32		/* ~8 Mhz */
 	
