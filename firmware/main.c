@@ -246,35 +246,35 @@ static inline void update_outputs(uint32_t x){
 
 
 // this function sets up PWM
-static inline void update_PWM(){
+static inline void init_PWM(){
 	// timer 2 setup 
 
 	// PWM engine 1
-	PC1CON = 0x0000;	// Turn off OCx while doing setup.
+	OC1CON = 0x0000;	// Turn off OCx while doing setup.
 	OC1R = 0x0000;		// Init comp reg
 	OC1RS = 0x0000;		// Init secondary reg
 	OC1CON = 0x0006;	// configure OC to PWM mode no fault pin
 
 	// PWM engine 2
-	PC2CON = 0x0000;	// Turn off OCx while doing setup.
+	OC2CON = 0x0000;	// Turn off OCx while doing setup.
 	OC2R = 0x0000;		// Init comp reg
 	OC2RS = 0x0000;		// Init secondary reg
 	OC2CON = 0x0006;	// configure OC to PWM mode no fault pin
 
 	// PWM engine 3
-	PC3CON = 0x0000;	// Turn off OCx while doing setup.
+	OC3CON = 0x0000;	// Turn off OCx while doing setup.
 	OC3R = 0x0000;		// Init comp reg
 	OC3RS = 0x0000;		// Init secondary reg
 	OC3CON = 0x0006;	// configure OC to PWM mode no fault pin
 
 	// PWM engine 4
-	PC4CON = 0x0000;	// Turn off OCx while doing setup.
+	OC4CON = 0x0000;	// Turn off OCx while doing setup.
 	OC4R = 0x0000;		// Init comp reg
 	OC4RS = 0x0000;		// Init secondary reg
 	OC4CON = 0x0006;	// configure OC to PWM mode no fault pin
 	
 	// turn on timer 2
-	T2CONSET = 0x8000
+	T2CONSET = 0x8000;
 	
 }
 
@@ -329,6 +329,7 @@ int main(void){
 
 	map_peripherals();
 	init_io_ports();
+	init_PWM();
 	init_spi();
 	init_dma();
 
@@ -365,15 +366,15 @@ int main(void){
 				update_PWM(1, rxBuf[1]);
 				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
 				break;
-			case 0x334D433E:	/* >CM3 PWM2*/
+			case 0x344D433E:	/* >CM3 PWM2*/
 				update_PWM(2, rxBuf[1]);
 				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
 				break;
-			case 0x334D433E:	/* >CM3 PWM3*/
+			case 0x354D433E:	/* >CM3 PWM3*/
 				update_PWM(3, rxBuf[1]);
 				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
 				break;
-			case 0x334D433E:	/* >CM3 PWM4*/
+			case 0x364D433E:	/* >CM3 PWM4*/
 				update_PWM(4, rxBuf[1]);
 				txBuf[1] = rxBuf[1] ^ ~0; /* input buffer exclsive or (^) with all 1's (~0) */
 				break;

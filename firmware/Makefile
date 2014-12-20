@@ -6,7 +6,7 @@ S		= $(H)
 vpath %.c $(M):$(S)
 
 ifndef GCCPREFIX
-    GCCPREFIX   = D:\\MinGW\\msys\\1.0\\home\\wireb\\pic32-tools\\bin\\pic32-
+    GCCPREFIX   = c:\\MinGW\\msys\\1.0\\home\\wireb\\pic32-tools\\bin\\pic32-
 endif
 
 DEFS		+= -I. -I$(H)
